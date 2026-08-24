@@ -20,7 +20,7 @@ runs:
   using: composite
   steps:
     - shell: bash
-      run: "${{ github.action_path }}/fetch-credentials.sh"
+      run: bash "${{ github.action_path }}/fetch-credentials.sh"
       env:
         VAULT_ADDR: ${{ inputs.vault-addr }}
         NEEDS_GITHUB_TOKEN: ${{ inputs.needs-github-token }}

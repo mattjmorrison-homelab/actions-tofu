@@ -20,7 +20,7 @@ runs:
   steps:
     - id: find
       shell: bash
-      run: "${{ github.action_path }}/find-check-run.sh"
+      run: bash "${{ github.action_path }}/find-check-run.sh"
       env:
         GH_ACTIONS_TOKEN: ${{ github.token }}
         HEAD_SHA: ${{ inputs.head-sha }}
