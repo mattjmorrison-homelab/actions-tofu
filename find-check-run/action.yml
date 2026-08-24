@@ -1,0 +1,27 @@
+name: Find the check run for a PR's merged commit
+description: >-
+  Looks up the successful "OpenTofu" workflow run whose check job ran
+  against the given head SHA, and outputs its run ID -- used to download
+  that exact tfplan artifact at apply time, so what gets applied is
+  identical to what was reviewed in the PR.
+inputs:
+  head-sha:
+    description: The PR's head commit SHA to search for
+    required: true
+  repo:
+    description: owner/repo to search
+    required: true
+outputs:
+  run-id:
+    description: The matching workflow run's ID
+    value: ${{ steps.find.outputs.run_id }}
+runs:
+  using: composite
+  steps:
+    - id: find
+      shell: bash
+      run: "${{ github.action_path }}/find-check-run.sh"
+      env:
+        GH_ACTIONS_TOKEN: ${{ github.token }}
+        HEAD_SHA: ${{ inputs.head-sha }}
+        REPO: ${{ inputs.repo }}

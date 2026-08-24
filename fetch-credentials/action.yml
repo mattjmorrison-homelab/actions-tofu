@@ -1,0 +1,26 @@
+name: Fetch credentials from OpenBao
+description: >-
+  Logs into OpenBao via the pod's own Kubernetes ServiceAccount identity
+  (role: github-actions-runner), fetches the Garage tofu-state bucket
+  credentials, and optionally admin-github's org PAT, exporting all of
+  them as env vars for the rest of the job.
+inputs:
+  vault-addr:
+    description: OpenBao address
+    required: false
+    default: http://k8s-openbao.openbao.svc:8200
+  needs-github-token:
+    description: >-
+      Also fetch admin-github's org PAT from OpenBao and export it as
+      GITHUB_TOKEN -- set this for callers whose own Terraform uses the
+      github provider (e.g. admin-github itself).
+    required: false
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: "${{ github.action_path }}/fetch-credentials.sh"
+      env:
+        VAULT_ADDR: ${{ inputs.vault-addr }}
+        NEEDS_GITHUB_TOKEN: ${{ inputs.needs-github-token }}
