@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+args="$*"
+case "$args" in
+  *"auth/kubernetes/login"*) echo '{"auth":{"client_token":"fake-client-token"}}' ;;
+  *"tofu-state-access-key-id"*) echo '{"data":{"data":{"value":"fake-access-key"}}}' ;;
+  *"tofu-state-secret-access-key"*) echo '{"data":{"data":{"value":"fake-secret-key"}}}' ;;
+  *"github-token"*) echo '{"data":{"data":{"value":"fake-gh-token"}}}' ;;
+  *)
+    echo "unexpected curl call: $args" >&2
+    exit 1
+    ;;
+esac
