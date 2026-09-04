@@ -5,8 +5,10 @@ set -euo pipefail
 # environment. Writes AWS_ACCESS_KEY_ID, AWS_SECRET_ACCESS_KEY, and
 # (when requested) GITHUB_TOKEN to GITHUB_ENV.
 
-JWT=$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)
-LOGIN_PAYLOAD=$(jq -n --arg jwt "$JWT" --arg role github-actions-runner '{jwt: $jwt, role: $role}')
+LOGIN_PAYLOAD=$(jq -n \
+  --arg jwt "$(cat /var/run/secrets/kubernetes.io/serviceaccount/token)" \
+  --arg role github-actions-runner \
+  '{jwt: $jwt, role: $role}')
 CLIENT_TOKEN=$(curl -sf -X POST "$VAULT_ADDR/v1/auth/kubernetes/login" -d "$LOGIN_PAYLOAD" \
   | jq -r '.auth.client_token')
 
