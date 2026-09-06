@@ -53,6 +53,19 @@ changes, unlike the actual script logic these two actions share.
   the hard way — `admin-openbao#15`/`admin-github#22`'s first `apply`
   runs both failed this way).
 
+  **Both actions default `region` to `garage`, not aws-cli's own
+  `us-east-1` default.** Garage's SigV4 signature scope must match the
+  same `region = "garage"` value every repo's own S3 backend config
+  already uses, or it rejects the request with "Authorization header
+  malformed, unexpected scope" (confirmed directly in Garage's own pod
+  logs). `PUT` (upload-plan) appears to work even with the wrong region --
+  botocore silently retries once using the region hint from the error
+  response body -- but `HeadObject` (which `aws s3 cp` does internally
+  before a download) is a bodyless HTTP HEAD, so that self-correction
+  can't happen and download-plan just fails outright. Don't be misled by
+  upload-plan "working" during investigation; check the actual signed
+  region on both.
+
 Each is a plain composite action: `action.yml` (inputs/outputs, thin) +
 its own `.sh` file, invoked via `${{ github.action_path }}` so the
 actual logic isn't embedded in YAML.
