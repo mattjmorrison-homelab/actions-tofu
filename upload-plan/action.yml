@@ -1,0 +1,37 @@
+name: Upload Terraform plan to Garage
+description: >-
+  Uploads a tfplan file directly to the shared Garage tofu-state bucket,
+  instead of a public GitHub Actions artifact -- these repos are public,
+  and a plan file's binary form embeds the real value of any attribute
+  Terraform already knows from state, even Sensitive-flagged ones (that
+  flag only redacts CLI display, not what's serialized into the plan).
+  Requires AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY already exported (see
+  actions-tofu/fetch-credentials).
+inputs:
+  key:
+    description: >-
+      Destination key within the bucket, e.g.
+      plans/<owner>/<repo>/<head-sha>/tfplan.
+    required: true
+  file:
+    description: Path to the plan file to upload.
+    required: false
+    default: tfplan
+  bucket:
+    description: Garage bucket name.
+    required: false
+    default: tofu-state
+  endpoint:
+    description: Garage S3 endpoint URL.
+    required: false
+    default: http://garage.garage.svc.cluster.local:3900
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: bash "${{ github.action_path }}/upload-plan.sh"
+      env:
+        FILE: ${{ inputs.file }}
+        KEY: ${{ inputs.key }}
+        BUCKET: ${{ inputs.bucket }}
+        ENDPOINT: ${{ inputs.endpoint }}

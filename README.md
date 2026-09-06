@@ -32,9 +32,18 @@ changes, unlike the actual script logic these two actions share.
   rest of the job.
 - **`find-check-run/`** — looks up the successful `check` run matching a
   PR's head SHA, for the `apply` job to download that exact `tfplan`
-  artifact from. Part of the plan/apply artifact pattern: what gets
-  applied is always identical to what was reviewed in the PR, never
-  re-planned at merge time.
+  artifact from. Superseded by `upload-plan`/`download-plan` below (no
+  callers left once every consumer migrates) — not yet removed.
+- **`upload-plan/`** and **`download-plan/`** — write/read a `tfplan` file
+  directly to/from the shared Garage `tofu-state` bucket, keyed by
+  `plans/<owner>/<repo>/<head-sha>/tfplan`, instead of a public GitHub
+  Actions artifact. These repos are public, and a plan file's binary form
+  embeds the real value of any attribute Terraform already knows from
+  state, even `Sensitive`-flagged ones (that flag only redacts CLI
+  display, not what's serialized into the plan) — this keeps that data
+  private. `apply` builds the same key directly from the merge event's
+  own head SHA, so `find-check-run`'s GitHub-API lookup is no longer
+  needed at all.
 
 Each is a plain composite action: `action.yml` (inputs/outputs, thin) +
 its own `.sh` file, invoked via `${{ github.action_path }}` so the
