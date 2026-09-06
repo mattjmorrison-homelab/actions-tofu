@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+
+if [[ -n "${AWS_CALL_LOG:-}" ]]; then
+  echo "$*" >> "$AWS_CALL_LOG"
+fi
+
+if [[ "$1" == "s3" && "$2" == "cp" ]]; then
+  src="$3"
+  dst="$4"
+  if [[ -n "${AWS_UPLOAD_CAPTURE_FILE:-}" ]]; then
+    cp "$src" "$AWS_UPLOAD_CAPTURE_FILE"
+  fi
+  exit 0
+fi
+
+echo "unexpected aws call: $*" >&2
+exit 1

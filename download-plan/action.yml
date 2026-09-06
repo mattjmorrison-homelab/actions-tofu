@@ -1,0 +1,35 @@
+name: Download Terraform plan from Garage
+description: >-
+  Downloads a tfplan file previously uploaded by actions-tofu/upload-plan,
+  for `tofu apply` to use unmodified -- what gets applied is always
+  identical to what was reviewed in the PR. Requires
+  AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY already exported (see
+  actions-tofu/fetch-credentials).
+inputs:
+  key:
+    description: >-
+      Source key within the bucket -- must match the key upload-plan used
+      for this same PR's head SHA.
+    required: true
+  file:
+    description: Local path to write the downloaded plan file to.
+    required: false
+    default: tfplan
+  bucket:
+    description: Garage bucket name.
+    required: false
+    default: tofu-state
+  endpoint:
+    description: Garage S3 endpoint URL.
+    required: false
+    default: http://garage.garage.svc.cluster.local:3900
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: bash "${{ github.action_path }}/download-plan.sh"
+      env:
+        FILE: ${{ inputs.file }}
+        KEY: ${{ inputs.key }}
+        BUCKET: ${{ inputs.bucket }}
+        ENDPOINT: ${{ inputs.endpoint }}
