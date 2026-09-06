@@ -25,6 +25,13 @@ inputs:
     description: Garage S3 endpoint URL.
     required: false
     default: http://garage.garage.svc.cluster.local:3900
+  region:
+    description: >-
+      Region name Garage expects in the SigV4 signature -- must match the
+      `region` value in every repo's own S3 backend config. aws-cli
+      defaults to us-east-1, which Garage rejects as a scope mismatch.
+    required: false
+    default: garage
 runs:
   using: composite
   steps:
@@ -35,3 +42,4 @@ runs:
         KEY: ${{ inputs.key }}
         BUCKET: ${{ inputs.bucket }}
         ENDPOINT: ${{ inputs.endpoint }}
+        REGION: ${{ inputs.region }}
