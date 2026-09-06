@@ -65,6 +65,17 @@ changes, unlike the actual script logic these two actions share.
   can't happen and download-plan just fails outright. Don't be misled by
   upload-plan "working" during investigation; check the actual signed
   region on both.
+- **`read-output/`** — downloads another repo's `terraform.tfstate`
+  directly from Garage and reads one `output` value out of it (optionally
+  extracting one key, if that output's value is a map). Lets a consumer
+  pull a value a producer repo's Terraform already computed -- e.g.
+  `admin-discord`'s `webhook_urls` output -- without the producer needing
+  write access to the consumer's own secrets store (the write happens on
+  the consumer's own side, via `actions-openbao/write-secret`). Always
+  masks the value it emits, since this action only ever exists to read
+  values a producer chose to mark sensitive. Reads the raw state JSON
+  with `jq` rather than running `tofu output` -- no `tofu`/`opentofu`
+  binary or backend init needed, just `aws`/`jq` like `download-plan`.
 
 Each is a plain composite action: `action.yml` (inputs/outputs, thin) +
 its own `.sh` file, invoked via `${{ github.action_path }}` so the

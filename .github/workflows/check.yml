@@ -16,7 +16,7 @@ jobs:
         run: actionlint
 
       - name: shellcheck
-        run: shellcheck fetch-credentials/fetch-credentials.sh find-check-run/find-check-run.sh upload-plan/upload-plan.sh download-plan/download-plan.sh
+        run: shellcheck fetch-credentials/fetch-credentials.sh find-check-run/find-check-run.sh upload-plan/upload-plan.sh download-plan/download-plan.sh read-output/read-output.sh
 
       - name: bats
-        run: bats fetch-credentials/test/ find-check-run/test/ upload-plan/test/ download-plan/test/
+        run: bats fetch-credentials/test/ find-check-run/test/ upload-plan/test/ download-plan/test/ read-output/test/

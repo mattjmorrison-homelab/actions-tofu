@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+
+if [[ -n "${AWS_CALL_LOG:-}" ]]; then
+  echo "$*" >> "$AWS_CALL_LOG"
+fi
+
+if [[ "$1" == "s3" && "$2" == "cp" ]]; then
+  dst="$4"
+  content="${MOCK_STATE_JSON:-}"
+  if [[ -z "$content" ]]; then
+    content='{}'
+  fi
+  printf '%s' "$content" > "$dst"
+  exit 0
+fi
+
+echo "unexpected aws call: $*" >&2
+exit 1
