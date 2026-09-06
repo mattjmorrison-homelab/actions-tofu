@@ -45,6 +45,14 @@ changes, unlike the actual script logic these two actions share.
   own head SHA, so `find-check-run`'s GitHub-API lookup is no longer
   needed at all.
 
+  **Callers must key `upload-plan` on `github.event.pull_request.head.sha`,
+  not `github.sha`.** `github.sha` does not equal the PR's head commit on
+  `pull_request` events — it's GitHub's own synthetic merge-ref commit
+  (`Merge <head> into <base>`). Using it makes `check` upload under the
+  wrong key, so `apply`'s `download-plan` 400s on every real merge (found
+  the hard way — `admin-openbao#15`/`admin-github#22`'s first `apply`
+  runs both failed this way).
+
 Each is a plain composite action: `action.yml` (inputs/outputs, thin) +
 its own `.sh` file, invoked via `${{ github.action_path }}` so the
 actual logic isn't embedded in YAML.
