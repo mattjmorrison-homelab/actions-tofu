@@ -1,0 +1,57 @@
+name: Read a Terraform output from another repo's Garage-backed state
+description: >-
+  Downloads another repo's terraform.tfstate directly from Garage and
+  reads one output value out of it -- lets a consumer pull a value a
+  producer repo's Terraform already computed (e.g. a Discord webhook
+  URL) without that producer needing write access to the consumer's own
+  secrets store. Requires AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY already
+  exported (see actions-tofu/fetch-credentials). Always masks the value
+  it emits, since this action only ever exists to read values a producer
+  chose to mark sensitive.
+inputs:
+  state-key:
+    description: >-
+      Source key within the bucket, e.g. admin-discord/terraform.tfstate
+      -- matches that repo's own backend "s3" { key = ... } config.
+    required: true
+  output-name:
+    description: The top-level `output` block name to read, e.g. webhook_urls.
+    required: true
+  map-key:
+    description: >-
+      If the output's value is a map, extract this one key from it.
+      Omit to return the whole output value as-is.
+    required: false
+    default: ""
+  bucket:
+    description: Garage bucket name.
+    required: false
+    default: tofu-state
+  endpoint:
+    description: Garage S3 endpoint URL.
+    required: false
+    default: http://garage.garage.svc.cluster.local:3900
+  region:
+    description: >-
+      Region name Garage expects in the SigV4 signature -- must match the
+      `region` value in every repo's own S3 backend config. aws-cli
+      defaults to us-east-1, which Garage rejects as a scope mismatch.
+    required: false
+    default: garage
+outputs:
+  value:
+    description: The extracted output value (masked in logs).
+    value: ${{ steps.read.outputs.value }}
+runs:
+  using: composite
+  steps:
+    - id: read
+      shell: bash
+      run: bash "${{ github.action_path }}/read-output.sh"
+      env:
+        STATE_KEY: ${{ inputs.state-key }}
+        OUTPUT_NAME: ${{ inputs.output-name }}
+        MAP_KEY: ${{ inputs.map-key }}
+        BUCKET: ${{ inputs.bucket }}
+        ENDPOINT: ${{ inputs.endpoint }}
+        REGION: ${{ inputs.region }}

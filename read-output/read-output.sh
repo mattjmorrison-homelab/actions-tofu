@@ -1,0 +1,30 @@
+#!/bin/bash
+set -euo pipefail
+
+if ! command -v aws >/dev/null; then
+  # Ubuntu's "awscli" package doesn't exist on this runner image (noble) --
+  # use AWS's own official installer instead.
+  command -v unzip >/dev/null || { sudo apt-get update && sudo apt-get install -y unzip; }
+  tmpdir=$(mktemp -d)
+  curl -sfL "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "$tmpdir/awscliv2.zip"
+  unzip -q "$tmpdir/awscliv2.zip" -d "$tmpdir"
+  sudo "$tmpdir/aws/install"
+  rm -rf "$tmpdir"
+fi
+
+state_file=$(mktemp)
+trap 'rm -f "$state_file"' EXIT
+
+aws s3 cp "s3://$BUCKET/$STATE_KEY" "$state_file" --endpoint-url "$ENDPOINT" --region "$REGION"
+
+VALUE=$(jq -r --arg on "$OUTPUT_NAME" --arg mk "$MAP_KEY" \
+  '.outputs[$on].value as $v | if $mk != "" then $v[$mk] else $v end' \
+  "$state_file")
+
+if [ -z "$VALUE" ] || [ "$VALUE" = "null" ]; then
+  echo "Output $OUTPUT_NAME${MAP_KEY:+.$MAP_KEY} not found in $STATE_KEY" >&2
+  exit 1
+fi
+
+echo "::add-mask::$VALUE"
+echo "value=$VALUE" >> "$GITHUB_OUTPUT"
