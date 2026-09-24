@@ -1,19 +1,38 @@
 name: Fetch credentials from OpenBao
 description: >-
-  Logs into OpenBao via the pod's own Kubernetes ServiceAccount identity
-  (role: github-actions-runner), fetches the Garage tofu-state bucket
-  credentials, and optionally admin-github's org PAT, exporting all of
-  them as env vars for the rest of the job.
+  Logs into OpenBao via the pod's own Kubernetes ServiceAccount identity,
+  fetches a Garage tofu-state bucket's credentials, and optionally
+  admin-github's org PAT, exporting all of them as env vars for the rest
+  of the job.
 inputs:
   vault-addr:
     description: OpenBao address
     required: false
     default: http://k8s-openbao.openbao.svc:8200
+  role:
+    description: >-
+      OpenBao Kubernetes-auth role to log in as. Defaults to the shared
+      github-actions-runner role (the old single shared tofu-state
+      bucket every Terraform repo used to read from) -- pass your own
+      repo's dedicated role once migrated onto its own per-repo bucket
+      (Phase 1b of the secrets-standard-compliance work).
+    required: false
+    default: github-actions-runner
+  kv-prefix:
+    description: >-
+      OpenBao KV path prefix the tofu-state-access-key-id/
+      tofu-state-secret-access-key keys live under, e.g.
+      "admin-github" (shared, default) or
+      "service/k8s-garage/<your-repo>" (your own dedicated bucket).
+    required: false
+    default: admin-github
   needs-github-token:
     description: >-
       Also fetch admin-github's org PAT from OpenBao and export it as
       GITHUB_TOKEN -- set this for callers whose own Terraform uses the
-      github provider (e.g. admin-github itself).
+      github provider (e.g. admin-github itself). Always reads from the
+      admin-github prefix regardless of kv-prefix, since the token
+      itself is only ever admin-github's.
     required: false
     default: "false"
 runs:
@@ -23,4 +42,6 @@ runs:
       run: bash "${{ github.action_path }}/fetch-credentials.sh"
       env:
         VAULT_ADDR: ${{ inputs.vault-addr }}
+        ROLE: ${{ inputs.role }}
+        KV_PREFIX: ${{ inputs.kv-prefix }}
         NEEDS_GITHUB_TOKEN: ${{ inputs.needs-github-token }}

@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
 args="$*"
+if [ -n "${MOCK_CALL_LOG:-}" ]; then
+  echo "$args" >> "$MOCK_CALL_LOG"
+fi
 case "$args" in
   *"auth/kubernetes/login"*) echo '{"auth":{"client_token":"fake-client-token"}}' ;;
   *"tofu-state-access-key-id"*) echo '{"data":{"data":{"value":"fake-access-key"}}}' ;;
